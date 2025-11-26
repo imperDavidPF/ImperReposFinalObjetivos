@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tablero de Seguimiento de Objetivos</title>
+     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+      // Inicializar EmailJS con tu Public Key
+      (function() {
+        // Reemplaza 'TU_PUBLIC_KEY_DE_EMAILJS' con tu Public Key real
+        emailjs.init({
+          publicKey: "IHubTYxIYO15cA8uL",
+          // Opcional: bloquear envíos desde dominios no autorizados
+          blockHeadless: true,
+          blockList: {
+            // Bloquear direcciones de email temporales o sospechosas
+            list: ['foo@emailjs.com', 'bar@emailjs.com'],
+            watchVariable: 'userEmail'
+          },
+          limitRate: {
+            // Limitar envíos a 10 por 60 segundos
+            id: 'app',
+            throttle: 10000
+          }
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/index.jsx"></script>
+  </body>
+</html> 
