@@ -1,8 +1,8 @@
-export const CompliancePanel = ({ objectivesData, currentDepartment }) => {
+export const CompliancePanel = ({ objectivesData, currentBoss }) => {
   const calculateCompliance = () => {
     let filteredObjectives = objectivesData;
-    if (currentDepartment) {
-      filteredObjectives = objectivesData.filter(item => item.department === currentDepartment);
+    if (currentBoss) {
+      filteredObjectives = objectivesData.filter(item => item.boss === currentBoss);
     }
     
     const total = filteredObjectives.length;
@@ -11,7 +11,7 @@ export const CompliancePanel = ({ objectivesData, currentDepartment }) => {
     
     return {
       value: avgCompliance,
-      department: currentDepartment || 'Todos los Departamentos'
+      boss: currentBoss || 'Todos los Jefes Directos'
     };
   };
 
@@ -25,9 +25,9 @@ export const CompliancePanel = ({ objectivesData, currentDepartment }) => {
   return (
     <div className="compliance-panel">
       <div className="compliance-card" style={{ background: backgroundColor }}>
-        <div className="compliance-label">Cumplimiento del Departamento</div>
+        <div className="compliance-label">Cumplimiento del Jefe Directo</div>
         <div className="compliance-value">{compliance.value}%</div>
-        <div>{compliance.department}</div>
+        <div>{compliance.boss}</div>
       </div>
     </div>
   );

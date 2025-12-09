@@ -20,7 +20,7 @@ ChartJS.register(
   Legend
 );
 
-export const DetailsSection = ({ selectedOwner, selectedDepartment, objectivesData }) => {
+export const DetailsSection = ({ selectedOwner, selectedBoss, objectivesData }) => {
   const [editingComment, setEditingComment] = useState(null);
   const [tempComment, setTempComment] = useState('');
   
@@ -29,13 +29,13 @@ export const DetailsSection = ({ selectedOwner, selectedDepartment, objectivesDa
   // Trackear selección anterior
   const prevSelectionRef = useRef({ 
     owner: null, 
-    department: null,
+    boss: null,
     objectivesCount: 0 
   });
 
   // Función para generar ID único del objetivo
   const getObjectiveId = useCallback((objective) => {
-    const id = `${objective.department}_${objective.owner}_${objective.objective}`
+    const id = `${objective.boss}_${objective.department}_${objective.owner}_${objective.objective}`
       .replace(/\s+/g, '_')
       .replace(/[^a-zA-Z0-9_]/g, '')
       .substring(0, 150);
@@ -46,38 +46,35 @@ export const DetailsSection = ({ selectedOwner, selectedDepartment, objectivesDa
   const getCurrentObjectives = useCallback(() => {
     if (selectedOwner) {
       return objectivesData.filter(
-        item => item.owner === selectedOwner.owner && item.department === selectedOwner.department
+        item => item.owner === selectedOwner.owner && 
+                item.boss === selectedOwner.boss
       );
-    } else if (selectedDepartment) {
-      return objectivesData.filter(item => item.department === selectedDepartment);
+    } else if (selectedBoss) {
+      return objectivesData.filter(item => item.boss === selectedBoss);
     }
     return [];
-  }, [selectedOwner, selectedDepartment, objectivesData]);
+  }, [selectedOwner, selectedBoss, objectivesData]);
 
   const objectives = getCurrentObjectives();
 
-  // ✅ EFECTO CORREGIDO: Sin loop infinito
   useEffect(() => {
-    // Si no hay objetivos, limpiar y salir
     if (objectives.length === 0) {
       if (prevSelectionRef.current.objectivesCount > 0) {
         console.log('🧹 Limpiando comentarios - no hay objetivos');
         clearComments();
-        prevSelectionRef.current = { owner: null, department: null, objectivesCount: 0 };
+        prevSelectionRef.current = { owner: null, boss: null, objectivesCount: 0 };
       }
       return;
     }
 
-    // Crear clave única para la selección actual
     const currentSelectionKey = selectedOwner 
-      ? `owner:${selectedOwner.owner}-${selectedOwner.department}`
-      : `department:${selectedDepartment}`;
+      ? `owner:${selectedOwner.owner}-${selectedOwner.boss}`
+      : `boss:${selectedBoss}`;
 
     const prevSelectionKey = prevSelectionRef.current.owner 
-      ? `owner:${prevSelectionRef.current.owner}-${prevSelectionRef.current.department}`
-      : `department:${prevSelectionRef.current.department}`;
+      ? `owner:${prevSelectionRef.current.owner}-${prevSelectionRef.current.boss}`
+      : `boss:${prevSelectionRef.current.boss}`;
 
-    // Solo cargar si la selección realmente cambió
     const selectionChanged = currentSelectionKey !== prevSelectionKey;
     const objectivesCountChanged = objectives.length !== prevSelectionRef.current.objectivesCount;
 
@@ -87,34 +84,31 @@ export const DetailsSection = ({ selectedOwner, selectedDepartment, objectivesDa
       
       loadMultipleComments(objectiveIds);
 
-      // Actualizar referencia
       prevSelectionRef.current = {
         owner: selectedOwner?.owner || null,
-        department: selectedOwner?.department || selectedDepartment || null,
+        boss: selectedOwner?.boss || selectedBoss || null,
         objectivesCount: objectives.length
       };
     }
   }, [
-    // 👇 SOLO estas dependencias críticas
     selectedOwner?.owner, 
-    selectedOwner?.department, 
-    selectedDepartment,
-    objectives.length, // Solo la longitud, no el array completo
+    selectedOwner?.boss, 
+    selectedBoss,
+    objectives.length,
     getObjectiveId, 
     loadMultipleComments, 
     clearComments
   ]);
 
-  // Limpiar cuando no hay selección
   useEffect(() => {
-    if (!selectedOwner && !selectedDepartment) {
+    if (!selectedOwner && !selectedBoss) {
       console.log('No hay selección activa');
       clearComments();
       setEditingComment(null);
       setTempComment('');
-      prevSelectionRef.current = { owner: null, department: null, objectivesCount: 0 };
+      prevSelectionRef.current = { owner: null, boss: null, objectivesCount: 0 };
     }
-  }, [selectedOwner, selectedDepartment, clearComments]);
+  }, [selectedOwner, selectedBoss, clearComments]);
 
   const handleSaveComment = async (objectiveId) => {
     if (!isOnline) {
@@ -160,7 +154,6 @@ export const DetailsSection = ({ selectedOwner, selectedDepartment, objectivesDa
     }
   };
 
-  // Resto del código igual...
   const getChartData = () => {
     if (selectedOwner) {
       return {
@@ -192,6 +185,7 @@ export const DetailsSection = ({ selectedOwner, selectedDepartment, objectivesDa
         if (!ownerMap[item.owner]) {
           ownerMap[item.owner] = {
             owner: item.owner,
+            department: item.department,
             objectives: [],
             totalProgress: 0
           };
@@ -263,12 +257,12 @@ export const DetailsSection = ({ selectedOwner, selectedDepartment, objectivesDa
 
   const chartData = getChartData();
 
-  if (!selectedOwner && !selectedDepartment) {
+  if (!selectedOwner && !selectedBoss) {
     return (
       <div className="card centered-card">
         <h2>Detalle de Objetivos</h2>
         <div className="no-selection">
-          <p>Selecciona un departamento o propietario del gráfico para ver el detalle de sus objetivos</p>
+          <p>Selecciona un jefe directo o propietario del gráfico para ver el detalle de sus objetivos</p>
         </div>
       </div>
     );
@@ -278,8 +272,8 @@ export const DetailsSection = ({ selectedOwner, selectedDepartment, objectivesDa
     <div className="card full-width-card">
       <h2>
         {selectedOwner 
-          ? `Objetivos de ${selectedOwner.owner} (${selectedOwner.department})`
-          : `Objetivos del Departamento ${selectedDepartment}`
+          ? `Objetivos de ${selectedOwner.owner} (Jefe: ${selectedOwner.boss}, Depto: ${selectedOwner.department})`
+          : `Objetivos del Equipo - ${selectedBoss}`
         }
         {!isOnline && (
           <span style={{ 

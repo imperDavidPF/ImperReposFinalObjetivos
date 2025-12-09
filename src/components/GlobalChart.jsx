@@ -8,7 +8,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { calculateDepartmentStats, calculateOwnerStats, generateDepartmentColors } from '../utils/chartUtils';
+import { calculateBossStats, calculateOwnerStatsByBoss, generateBossColors } from '../utils/chartUtils';
 
 ChartJS.register(
   CategoryScale,
@@ -21,32 +21,32 @@ ChartJS.register(
 
 export const GlobalChart = ({ 
   objectivesData, 
-  currentDepartment, 
-  isDepartmentView, 
-  onDepartmentSelect, 
+  currentBoss, 
+  isBossView, 
+  onBossSelect, 
   onOwnerSelect 
 }) => {
-  const departments = [...new Set(objectivesData.map(item => item.department))];
-  const departmentColors = generateDepartmentColors(departments);
+  const bosses = [...new Set(objectivesData.map(item => item.boss))].filter(boss => boss);
+  const bossColors = generateBossColors(bosses);
 
   const getChartData = () => {
-    if (isDepartmentView) {
-      const departmentStats = calculateDepartmentStats(objectivesData);
+    if (isBossView) {
+      const bossStats = calculateBossStats(objectivesData);
       
       return {
-        labels: departmentStats.map(dept => dept.department),
+        labels: bossStats.map(boss => boss.boss),
         datasets: [
           {
             label: 'Avance Promedio (%)',
-            data: departmentStats.map(dept => dept.avgProgress),
-            backgroundColor: departmentStats.map(dept => departmentColors[dept.department]),
-            borderColor: departmentStats.map(dept => departmentColors[dept.department].replace('0.7', '1')),
+            data: bossStats.map(boss => boss.avgProgress),
+            backgroundColor: bossStats.map(boss => bossColors[boss.boss]),
+            borderColor: bossStats.map(boss => bossColors[boss.boss].replace('0.7', '1')),
             borderWidth: 1,
           },
         ],
       };
     } else {
-      const ownerStats = calculateOwnerStats(objectivesData, currentDepartment);
+      const ownerStats = calculateOwnerStatsByBoss(objectivesData, currentBoss);
       
       return {
         labels: ownerStats.map(owner => owner.owner),
@@ -54,8 +54,8 @@ export const GlobalChart = ({
           {
             label: 'Avance Promedio (%)',
             data: ownerStats.map(owner => owner.avgProgress),
-            backgroundColor: ownerStats.map(owner => departmentColors[owner.department]),
-            borderColor: ownerStats.map(owner => departmentColors[owner.department].replace('0.7', '1')),
+            backgroundColor: ownerStats.map(owner => bossColors[owner.boss]),
+            borderColor: ownerStats.map(owner => bossColors[owner.boss].replace('0.7', '1')),
             borderWidth: 1,
           },
         ],
@@ -78,7 +78,7 @@ export const GlobalChart = ({
       x: {
         title: {
           display: true,
-          text: isDepartmentView ? 'Departamentos' : 'Propietarios'
+          text: isBossView ? 'Jefes Directos' : 'Propietarios'
         },
         ticks: {
           callback: function(value) {
@@ -92,15 +92,16 @@ export const GlobalChart = ({
       if (elements.length > 0) {
         const index = elements[0].index;
         
-        if (isDepartmentView) {
-          const departmentStats = calculateDepartmentStats(objectivesData);
-          const department = departmentStats[index].department;
-          onDepartmentSelect(department);
+        if (isBossView) {
+          const bossStats = calculateBossStats(objectivesData);
+          const boss = bossStats[index].boss;
+          onBossSelect(boss);
         } else {
-          const ownerStats = calculateOwnerStats(objectivesData, currentDepartment);
+          const ownerStats = calculateOwnerStatsByBoss(objectivesData, currentBoss);
           const owner = ownerStats[index].owner;
+          const boss = ownerStats[index].boss;
           const department = ownerStats[index].department;
-          onOwnerSelect(owner, department);
+          onOwnerSelect(owner, boss, department);
         }
       }
     },
@@ -108,10 +109,10 @@ export const GlobalChart = ({
       tooltip: {
         callbacks: {
           label: function(context) {
-            if (isDepartmentView) {
+            if (isBossView) {
               return `Avance: ${context.parsed.y}%`;
             } else {
-              const ownerStats = calculateOwnerStats(objectivesData, currentDepartment);
+              const ownerStats = calculateOwnerStatsByBoss(objectivesData, currentBoss);
               const department = ownerStats[context.dataIndex].department;
               return `Departamento: ${department}, Avance: ${context.parsed.y}%`;
             }
