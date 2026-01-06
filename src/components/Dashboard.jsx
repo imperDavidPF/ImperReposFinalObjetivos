@@ -393,7 +393,7 @@ export const Dashboard = () => {
               value={currentBoss}
               onChange={handleBossFilter}
             >
-              <option value="">Todos los jefes directos</option>
+              <option value="">Todos los jefes</option>
               {bosses.map(boss => (
                 <option key={boss} value={boss}>{boss}</option>
               ))}
